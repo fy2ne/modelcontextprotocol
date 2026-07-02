@@ -977,6 +977,9 @@ export interface Implementation extends BaseMetadata, Icons {
  * @example Progress message
  * {@includeCode ./examples/ProgressNotificationParams/progress-message.json}
  *
+ * @example Progress with content chunk
+ * {@includeCode ./examples/ProgressNotificationParams/progress-with-content-chunk.json}
+ *
  * @category `notifications/progress`
  */
 export interface ProgressNotificationParams extends NotificationParams {
@@ -1000,6 +1003,14 @@ export interface ProgressNotificationParams extends NotificationParams {
    * An optional message describing the current progress.
    */
   message?: string;
+  /**
+   * An optional monotonic sequence number for ordering content chunks within a single progress stream.
+   */
+  seq?: number;
+  /**
+   * An optional intermediate content chunk for streaming partial tool results.
+   */
+  contentChunk?: ContentBlock;
 }
 
 /**

@@ -1,0 +1,11 @@
+{
+  "progressToken": "oivaizmir",
+  "progress": 0.5,
+  "total": 1,
+  "message": "Searching documents...",
+  "seq": 1,
+  "contentChunk": {
+    "type": "text",
+    "text": "Found 3 documents matching query."
+  }
+}

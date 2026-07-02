@@ -170,6 +170,59 @@ To invoke a tool, clients send a `tools/call` request:
 }
 ```
 
+### Streaming Tool Results
+
+Servers **MAY** emit `notifications/progress` notifications during a `tools/call` request to stream intermediate results. Each notification can include an optional `contentChunk` field carrying partial tool output.
+
+For ordering, each chunk includes a `seq` field — a monotonic integer scoped to the request's `progressToken`.
+
+**Streaming flow:**
+
+```jsonc
+// Server sends intermediate chunks during tool execution
+{
+  "jsonrpc": "2.0",
+  "method": "notifications/progress",
+  "params": {
+    "progressToken": "token-123",
+    "progress": 0.5,
+    "seq": 1,
+    "contentChunk": {
+      "type": "text",
+      "text": "Found 3 documents matching query..."
+    }
+  }
+}
+{
+  "jsonrpc": "2.0",
+  "method": "notifications/progress",
+  "params": {
+    "progressToken": "token-123",
+    "progress": 1.0,
+    "seq": 2,
+    "contentChunk": {
+      "type": "text",
+      "text": "Processing complete. Generating summary..."
+    }
+  }
+}
+
+// Final authoritative result
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "result": {
+    "resultType": "complete",
+    "content": [
+      { "type": "text", "text": "Found 3 documents. Summary: ..." }
+    ],
+    "isError": false
+  }
+}
+```
+
+The final `tools/call` response is always the authoritative result. Clients that do not handle `contentChunk` simply ignore the optional field.
+
 ### Input Required Tool Results
 
 Servers **MAY** respond to `tools/call` with an [`InputRequiredResult`](/specification/draft/basic/patterns/mrtr#inputrequiredresult) to indicate that additional input is needed before the tool call can be completed. This follows the [multi round-trip requests](/specification/draft/basic/patterns/mrtr#multi-round-trip-requests) mechanism.
@@ -274,6 +327,21 @@ sequenceDiagram
       Client->>Server: tools/list
       Server-->>Client: Updated tools
     end
+```
+
+### Streaming Flow
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Server
+
+    Note over Client,Server: Invocation with streaming
+    Client->>Server: tools/call
+    Server--)Client: notifications/progress (seq: 1, contentChunk)
+    Server--)Client: notifications/progress (seq: 2, contentChunk)
+    Server--)Client: notifications/progress (seq: 3, contentChunk)
+    Server-->>Client: tools/call result (authoritative)
 ```
 
 ## Data Types
